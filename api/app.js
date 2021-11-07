@@ -15,10 +15,6 @@ const documentRouter = require("./routes/document");
 const app = express();
 db.connect(process.env.MONGO_CONNECTION);
 
-// view engine setup
-app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "jade");
-console.log(process.env.FRONTEND_HOST);
 app.use(helmet());
 app.use(
   cors({

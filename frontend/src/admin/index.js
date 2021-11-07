@@ -31,8 +31,11 @@ const backend = process.env.REACT_APP_API || "http://localhost:36912";
 const host = process.env.REACT_APP_HOST || "http://localhost:3000";
 const dateFormat = "dddd, MM/DD/YY, h:mm a";
 const notificationConfig = { placement: "bottomRight", duration: 2 };
-const getTokens = (page) => () =>
-  fetch(`${backend}/api/v1/token`).then((res) => res.json());
+
+const getTokens = (page) => async () => {
+  const data = await axios.get(`${backend}/api/v1/token`, { params: { page } });
+  return data.data;
+};
 
 const postToken = async ({ user, expiresAt }) =>
   axios({
@@ -47,9 +50,7 @@ const postToken = async ({ user, expiresAt }) =>
 const AddToken = ({ refetch }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [user, setUser] = useState(null);
-  console.log("user: ", user);
   const [expiresAt, setExpiresAt] = useState(null);
-  console.log("expiresAt: ", expiresAt);
 
   const setUserValue = (event) => setUser(event.target.value);
 
@@ -63,7 +64,6 @@ const AddToken = ({ refetch }) => {
           ...notificationConfig,
           message: "New Token has been created",
         });
-        console.log("result: ", result);
       } catch (err) {
         notification.error({
           ...notificationConfig,
@@ -136,21 +136,16 @@ const Date = ({ update, expiresAt }) => {
 };
 
 const Admin = () => {
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const { isLoading, error, data, refetch } = useQuery(
     ["tokens", page],
     getTokens(page),
     { keepPreviousData: true }
   );
-
   const dataWithKey = useMemo(
-    () => data?.map((entity) => ({ ...entity, key: entity._id })),
+    () => data?.result?.map((entity) => ({ ...entity, key: entity._id })),
     [data]
   );
-
-  const changeTable = (value) => {
-    console.log("value: ", value);
-  };
 
   const update = (key, _id) => (value) => {};
   const remove = (_id) => () => {};
@@ -200,14 +195,14 @@ const Admin = () => {
           },
           {
             title: "Created at",
-            dataIndex: "expiresAt",
-            key: "expiresAt",
-            render: (expiresAt) => (
-              <>{moment(expiresAt).format("MM/DD/YY h:mm a")}</>
+            dataIndex: "createdAt",
+            key: "createdAt",
+            render: (createdAt) => (
+              <>{moment(createdAt).format("MM/DD/YY h:mm a")}</>
             ),
           },
           {
-            title: "Link Usage Count",
+            title: "Usage",
             dataIndex: "usageCount",
             key: "usageCount",
             render: (count) => <>{count}</>,

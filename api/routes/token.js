@@ -11,8 +11,20 @@ const get = async (req, res, next) => {
     const token = await getTokenById(req.params.tokenId).catch(next);
     res.json(token);
   } else {
-    const tokens = await Token.find().sort({ createdAt: -1 }).catch(next);
-    res.json(tokens);
+    const [
+      {
+        result,
+        totalCount: [{ totalCount }],
+      },
+    ] = await Token.aggregate([
+      {
+        $facet: {
+          result: [{ $skip: ((req.query.page || 1) - 1) * 10 }, { $limit: 10 }],
+          totalCount: [{ $count: "totalCount" }],
+        },
+      },
+    ]);
+    res.json({ result, totalCount });
   }
 };
 
