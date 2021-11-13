@@ -20,23 +20,20 @@ const isTokenValid = async (tokenId) => {
     const token = await getTokenById(tokenId);
     if (!token) {
       return {
-        isValid: false,
         error: "invalid",
       };
     }
     if (token.isRejected || moment(token.expiresAt).isBefore(moment())) {
       return {
-        isValid: false,
         error: "expired",
       };
     }
     return {
-      isValid: true,
+      fileIds: token.fileIds,
     };
   } catch (err) {
     console.log("err: ", err);
     return {
-      isValid: false,
       error: "invalid",
     };
   }

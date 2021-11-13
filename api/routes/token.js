@@ -19,7 +19,11 @@ const get = async (req, res, next) => {
     ] = await Token.aggregate([
       {
         $facet: {
-          result: [{ $skip: ((req.query.page || 1) - 1) * 10 }, { $limit: 10 }],
+          result: [
+            { $sort: { createdAt: -1 } },
+            { $skip: ((req.query.page || 1) - 1) * 10 },
+            { $limit: 10 },
+          ],
           totalCount: [{ $count: "totalCount" }],
         },
       },
