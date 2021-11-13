@@ -3,175 +3,108 @@ import {
   Table,
   Space,
   Button,
-  Spin,
   notification,
+  Select,
   Popconfirm,
-  DatePicker,
-  Popover,
-  Input,
+  Tooltip,
+  Switch,
 } from "antd";
 import {
   CloseCircleOutlined,
-  EditOutlined,
   CopyOutlined,
   DisconnectOutlined,
   LinkOutlined,
-  SaveOutlined,
-  PlusOutlined,
-  UserOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 import { useQuery, useMutation } from "react-query";
 import _ from "lodash";
-import axios from "axios";
+import styled from "styled-components";
 
 import Flex from "../Basic/Flex";
+import Date from "./Date";
+import AddToken from "./AddToken";
+import { getTokens, updateToken, deleteToken } from "../api";
 
-const backend = process.env.REACT_APP_API || "http://localhost:36912";
 const host = process.env.REACT_APP_HOST || "http://localhost:3000";
-const dateFormat = "dddd, MM/DD/YY, h:mm a";
 const notificationConfig = { placement: "bottomRight", duration: 2 };
 
-const getTokens = (page) => async () => {
-  const data = await axios.get(`${backend}/api/v1/token`, { params: { page } });
-  return data.data;
-};
+const FileAssign = styled(Select)`
+  width: 240px;
+`;
+const Wrapper = styled(Flex)`
+  padding: 10px;
+`;
 
-const postToken = async ({ user, expiresAt }) =>
-  axios({
-    method: "post",
-    url: `${backend}/api/v1/token`,
-    data: {
-      user,
-      expiresAt,
-    },
-  });
-
-const AddToken = ({ refetch }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [user, setUser] = useState(null);
-  const [expiresAt, setExpiresAt] = useState(null);
-
-  const setUserValue = (event) => setUser(event.target.value);
-
-  const add = async () => {
-    if (user && expiresAt) {
-      try {
-        const result = await postToken({ user, expiresAt });
-        setIsVisible(false);
-        refetch();
-        notification.success({
-          ...notificationConfig,
-          message: "New Token has been created",
-        });
-      } catch (err) {
-        notification.error({
-          ...notificationConfig,
-          message: "New Token has been created",
-        });
-      }
-    }
-  };
-
-  const toggleIsVisible = () => setIsVisible((prevIsVisible) => !prevIsVisible);
-
-  return (
-    <Popover
-      destroyTooltipOnHide
-      visible={isVisible}
-      onVisibleChange={toggleIsVisible}
-      content={
-        <Space>
-          <Input
-            placeholder="User"
-            onChange={setUserValue}
-            prefix={<UserOutlined />}
-          />
-          <DatePicker
-            showTime
-            onChange={setExpiresAt}
-            format={dateFormat}
-            placeholder="Expiration Date"
-          />
-          <Button
-            type="link"
-            shape="circle"
-            icon={<SaveOutlined />}
-            onClick={add}
-          />
-        </Space>
-      }
-      trigger="click"
-    >
-      <Button icon={<PlusOutlined />}>Add token</Button>
-    </Popover>
-  );
-};
-
-const Date = ({ update, expiresAt }) => {
-  const [isEditingDate, setIsEditingDate] = useState(false);
-  const toggleDateEdit = () =>
-    setIsEditingDate((prevIsEditingDate) => !prevIsEditingDate);
-
-  return (
-    <Space>
-      {isEditingDate ? (
-        <DatePicker
-          showTime
-          onChange={update}
-          value={moment(expiresAt)}
-          format={dateFormat}
-        />
-      ) : (
-        <>{moment(expiresAt).format(dateFormat)}</>
-      )}
-      <Button
-        type="link"
-        shape="circle"
-        icon={isEditingDate ? <SaveOutlined /> : <EditOutlined />}
-        onClick={toggleDateEdit}
-      />
-    </Space>
-  );
-};
-
-const Admin = () => {
+const Admin = ({ addToUndo = () => {} }) => {
   const [page, setPage] = useState(1);
   const { isLoading, error, data, refetch } = useQuery(
     ["tokens", page],
     getTokens(page),
     { keepPreviousData: true }
   );
+  const mutation = useMutation(
+    (newToken) => {
+      console.log("newToken: ", newToken);
+      const { _id, ...mutation } = newToken;
+      return updateToken({ _id, mutation });
+    },
+    {
+      onSuccess: () => refetch(),
+    }
+  );
+
   const dataWithKey = useMemo(
-    () => data?.result?.map((entity) => ({ ...entity, key: entity._id })),
+    () => data?.map((entity) => ({ ...entity, key: entity._id })),
     [data]
   );
 
-  const update = (key, _id) => (value) => {};
-  const remove = (_id) => () => {};
-  const copyToClipboard = (token) => () => {
-    const url = `${host}/${token}`;
-    try {
-      navigator.clipboard.writeText(url);
-      notification.success({
-        ...notificationConfig,
-        message: "URL copied to clipboard.",
-      });
-    } catch (err) {}
+  const update = (key, _id) => (value) => {
+    mutation.mutate({
+      _id,
+      [key]: value,
+    });
+    let message;
+    switch (key) {
+      case "isRejected":
+        message = `Token has been ${value ? "activated" : "rejected"}`;
+        break;
+      default:
+        message = `Expiration date has been updated`;
+        break;
+    }
+    notification.success({
+      ...notificationConfig,
+      message,
+    });
   };
 
-  if (isLoading)
-    return (
-      <Flex>
-        <Spin size="large" />
-      </Flex>
-    );
+  const reject = (_id) => (isRejected) => {
+    update("isRejected", _id)(isRejected);
+  };
 
-  if (error) return <Flex>An error has occurred: {error?.message}</Flex>;
+  const remove = (_id) => () => {
+    addToUndo(_.find(data, { _id }));
+    deleteToken(_id);
+    refetch();
+  };
+
+  const copyToClipboard = (token) => () => {
+    const url = `${host}/${token}`;
+    navigator.clipboard.writeText(url);
+    notification.success({
+      ...notificationConfig,
+      message: "URL copied to clipboard.",
+    });
+  };
+
+  if (error) {
+    return <Flex>An error has occurred: {error?.message}</Flex>;
+  }
 
   return (
-    <>
+    <Wrapper column>
       <Table
+        loading={isLoading}
         pagination={{
           total: data?.totalCount,
           current: page,
@@ -194,11 +127,21 @@ const Admin = () => {
             ),
           },
           {
-            title: "Created at",
-            dataIndex: "createdAt",
-            key: "createdAt",
+            title: "Updated at",
+            dataIndex: "updatedAt",
+            key: "updatedAt",
+            render: (updatedAt) => (
+              <>{moment(updatedAt).format("DD/MM/YY h:mm a")}</>
+            ),
+          },
+          {
+            title: "Access",
+            dataIndex: "files",
+            key: "files",
             render: (createdAt) => (
-              <>{moment(createdAt).format("MM/DD/YY h:mm a")}</>
+              <FileAssign mode="tags" onChange={() => {}}>
+                <Select.Option>test</Select.Option>
+              </FileAssign>
             ),
           },
           {
@@ -213,41 +156,36 @@ const Admin = () => {
             dataIndex: "isRejected",
             render: (isRejected, { _id }) => (
               <Space size="middle">
-                <Button
-                  type="link"
-                  shape="circle"
-                  icon={<CopyOutlined />}
-                  onClick={copyToClipboard(_id)}
-                />
-                <Popconfirm
-                  placement="topLeft"
-                  title={isRejected ? "Enable token?" : "Reject token?"}
-                  onConfirm={update("isRejected", _id)}
-                  okText="Yes"
-                  cancelText="No"
-                >
+                <Tooltip title="Copy token-URL">
                   <Button
-                    type={isRejected ? "link" : "text"}
+                    type="link"
                     shape="circle"
-                    icon={
-                      isRejected ? <LinkOutlined /> : <DisconnectOutlined />
-                    }
-                    {...(isRejected ? {} : { danger: true })}
+                    icon={<CopyOutlined />}
+                    onClick={copyToClipboard(_id)}
                   />
-                </Popconfirm>
+                </Tooltip>
+                <Tooltip title="Reject token">
+                  <Switch
+                    checkedChildren={<LinkOutlined />}
+                    unCheckedChildren={<DisconnectOutlined />}
+                    checked={isRejected}
+                    onChange={reject(_id)}
+                  />
+                </Tooltip>
                 <Popconfirm
-                  placement="topLeft"
-                  title="Delete token?"
+                  title="Delete this token?"
                   onConfirm={remove(_id)}
                   okText="Yes"
                   cancelText="No"
                 >
-                  <Button
-                    type="text"
-                    danger
-                    shape="circle"
-                    icon={<CloseCircleOutlined />}
-                  />
+                  <Tooltip title="Delete token">
+                    <Button
+                      type="text"
+                      danger
+                      shape="circle"
+                      icon={<CloseCircleOutlined />}
+                    />
+                  </Tooltip>
                 </Popconfirm>
               </Space>
             ),
@@ -256,7 +194,7 @@ const Admin = () => {
         dataSource={dataWithKey}
       />
       <AddToken refetch={refetch} />
-    </>
+    </Wrapper>
   );
 };
 export default Admin;
