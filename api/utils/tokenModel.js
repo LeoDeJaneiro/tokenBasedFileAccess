@@ -6,6 +6,7 @@ const TokenSchema = new Schema(
     expiresAt: { type: Date, required: true },
     isRejected: Boolean,
     usageCount: { type: Number, default: 0 },
+    documents: [{ type: String }],
   },
   { timestamps: true }
 );

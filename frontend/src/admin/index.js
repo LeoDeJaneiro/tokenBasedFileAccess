@@ -4,7 +4,6 @@ import {
   Space,
   Button,
   notification,
-  Select,
   Popconfirm,
   Tooltip,
   Switch,
@@ -23,25 +22,29 @@ import styled from "styled-components";
 import Flex from "../Basic/Flex";
 import Date from "./Date";
 import AddToken from "./AddToken";
-import { getTokens, updateToken, deleteToken } from "../api";
+import Documents from "./Documents";
+import {
+  getDocuments,
+  getTokens,
+  updateToken,
+  deleteToken,
+} from "../Basic/api";
 
-const host = process.env.REACT_APP_HOST || "http://localhost:3000";
 const notificationConfig = { placement: "bottomRight", duration: 2 };
 
-const FileAssign = styled(Select)`
-  width: 240px;
-`;
 const Wrapper = styled(Flex)`
   padding: 10px;
 `;
 
 const Admin = ({ addToUndo = () => {} }) => {
   const [page, setPage] = useState(1);
+
   const { isLoading, error, data, refetch } = useQuery(
     ["tokens", page],
     getTokens(page),
     { keepPreviousData: true }
   );
+
   const mutation = useMutation(
     (newToken) => {
       console.log("newToken: ", newToken);
@@ -53,12 +56,19 @@ const Admin = ({ addToUndo = () => {} }) => {
     }
   );
 
+  const {
+    isLoading: isLoadingDocuments,
+    error: errorOfDocuments,
+    data: documentOptions,
+  } = useQuery(["documents"], getDocuments);
+
   const dataWithKey = useMemo(
     () => data?.map((entity) => ({ ...entity, key: entity._id })),
     [data]
   );
 
   const update = (key, _id) => (value) => {
+    console.log("value: ", value);
     mutation.mutate({
       _id,
       [key]: value,
@@ -89,7 +99,7 @@ const Admin = ({ addToUndo = () => {} }) => {
   };
 
   const copyToClipboard = (token) => () => {
-    const url = `${host}/${token}`;
+    const url = `${window?.location?.origin}/${token}`;
     navigator.clipboard.writeText(url);
     notification.success({
       ...notificationConfig,
@@ -135,13 +145,17 @@ const Admin = ({ addToUndo = () => {} }) => {
             ),
           },
           {
-            title: "Access",
-            dataIndex: "files",
-            key: "files",
-            render: (createdAt) => (
-              <FileAssign mode="tags" onChange={() => {}}>
-                <Select.Option>test</Select.Option>
-              </FileAssign>
+            title: "Documents",
+            dataIndex: "documents",
+            key: "documents",
+            render: (documents, { _id }) => (
+              <Documents
+                isLoadingDocuments={isLoadingDocuments}
+                errorOfDocuments={errorOfDocuments}
+                update={update("documents", _id)}
+                documents={documents}
+                documentOptions={documentOptions}
+              />
             ),
           },
           {
@@ -164,7 +178,7 @@ const Admin = ({ addToUndo = () => {} }) => {
                     onClick={copyToClipboard(_id)}
                   />
                 </Tooltip>
-                <Tooltip title="Reject token">
+                <Tooltip title={isRejected ? "Enable token" : "Reject token"}>
                   <Switch
                     checkedChildren={<LinkOutlined />}
                     unCheckedChildren={<DisconnectOutlined />}

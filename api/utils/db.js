@@ -11,7 +11,6 @@ module.exports = {
   connect: (DB_URL) => {
     mongoose.connect(DB_URL);
     config();
-    //Log an error if we fail to connect
     mongoose.connection.on("error", (err) => {
       console.error(err.message);
       console.log("Mongoose connection error: " + DB_URL);
@@ -20,7 +19,6 @@ module.exports = {
     });
   },
 
-  //close the connection
   close: () => {
     mongoose.connection.close();
   },

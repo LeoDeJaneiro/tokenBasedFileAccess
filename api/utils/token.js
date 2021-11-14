@@ -29,10 +29,9 @@ const isTokenValid = async (tokenId) => {
       };
     }
     return {
-      fileIds: token.fileIds,
+      documents: token.documents,
     };
   } catch (err) {
-    console.log("err: ", err);
     return {
       error: "invalid",
     };

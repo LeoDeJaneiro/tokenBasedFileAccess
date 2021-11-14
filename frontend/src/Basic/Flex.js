@@ -5,6 +5,11 @@ const Flex = styled.div`
   justify-content: center;
 
   ${(props) =>
+    props.start &&
+    css`
+      justify-content: start;
+    `}
+  ${(props) =>
     props.space &&
     css`
       justify-content: space-between;
