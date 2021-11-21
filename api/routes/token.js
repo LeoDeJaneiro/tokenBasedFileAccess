@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const moment = require("moment");
 
-const { isAuthorized } = require("../utils/auth");
+const { isAuthorizedMiddleware } = require("../utils/auth");
 const Token = require("../utils/tokenModel");
 const { getTokenById } = require("../utils/token");
 
@@ -56,12 +56,7 @@ const remove = async (req, res, next) => {
   res.json({ message: "success" });
 };
 
-router.use((req, res, next) => {
-  if (!isAuthorized(req)) {
-    res.status(401);
-  }
-  next();
-});
+router.use(isAuthorizedMiddleware);
 
 router.get("/", get);
 router.get("/:tokenId", get);

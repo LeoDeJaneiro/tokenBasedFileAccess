@@ -1,23 +1,27 @@
 import { useState } from "react";
 import { Space, Button, notification, DatePicker, Popover, Input } from "antd";
 import { SaveOutlined, PlusOutlined, UserOutlined } from "@ant-design/icons";
+import moment from "moment";
 
 import { postToken } from "../Basic/api";
+import Documents from "./Documents";
 
+const defaultExpiration = moment();
 const dateFormat = "dddd, MM/DD/YY, h:mm a";
 const notificationConfig = { placement: "bottomRight", duration: 2 };
 
-const AddToken = ({ refetch }) => {
+const AddToken = ({ refetch, documentOptions }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [user, setUser] = useState(null);
-  const [expiresAt, setExpiresAt] = useState(null);
+  const [expiresAt, setExpiresAt] = useState(defaultExpiration);
+  const [documents, setDocuments] = useState([]);
 
   const setUserValue = (event) => setUser(event.target.value);
 
   const add = async () => {
     if (user && expiresAt) {
       try {
-        const result = await postToken({ user, expiresAt });
+        await postToken({ user, expiresAt, documents });
         setIsVisible(false);
         refetch();
         notification.success({
@@ -52,6 +56,11 @@ const AddToken = ({ refetch }) => {
             onChange={setExpiresAt}
             format={dateFormat}
             placeholder="Expiration Date"
+          />
+          <Documents
+            update={setDocuments}
+            documents={documents}
+            documentOptions={documentOptions}
           />
           <Button
             type="link"

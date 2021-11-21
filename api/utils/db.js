@@ -12,9 +12,7 @@ module.exports = {
     mongoose.connect(DB_URL);
     config();
     mongoose.connection.on("error", (err) => {
-      console.error(err.message);
-      console.log("Mongoose connection error: " + DB_URL);
-
+      console.error("Mongoose connection error: " + DB_URL + err.message);
       process.exit();
     });
   },

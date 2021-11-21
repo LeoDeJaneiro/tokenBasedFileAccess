@@ -25,8 +25,8 @@ const DocumentAssign = styled(Select)`
 `;
 
 const Documents = ({
-  isLoadingDocuments,
-  errorOfDocuments,
+  isLoading,
+  error,
   update,
   documents,
   documentOptions,
@@ -37,7 +37,6 @@ const Documents = ({
       return newDocumentIds.map((id) => _.find(documentOptions, { id }));
     }
   }, [newDocumentIds, documentOptions]);
-
   const saveUpdate = () => {
     update(newDocumentIds);
   };
@@ -56,9 +55,9 @@ const Documents = ({
         onChange={setNewDocumentIds}
         size="large"
         suffixIcon={<CloudOutlined />}
-        loading={isLoadingDocuments}
-        disabled={errorOfDocuments}
-        placeholder={errorOfDocuments ? "Error loading drive" : ""}
+        loading={isLoading}
+        disabled={error}
+        placeholder={error ? "Error loading drive" : ""}
       >
         {documentOptions?.map(({ id, name, mimeType }) => (
           <Select.Option key={id} value={id}>

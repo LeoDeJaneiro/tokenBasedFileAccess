@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from "react-query/devtools";
 
 import Document from "./document";
 import Admin from "./admin";
+import Login from "./Basic/Login";
 
 const queryClient = new QueryClient();
 
@@ -15,6 +16,9 @@ function App() {
         <Switch>
           <Route path="/admin">
             <Admin />
+          </Route>
+          <Route path="/login">
+            <Login />
           </Route>
           <Route path="/:token">
             <Document />

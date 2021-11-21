@@ -44,10 +44,8 @@ const Admin = ({ addToUndo = () => {} }) => {
     getTokens(page),
     { keepPreviousData: true }
   );
-
   const mutation = useMutation(
     (newToken) => {
-      console.log("newToken: ", newToken);
       const { _id, ...mutation } = newToken;
       return updateToken({ _id, mutation });
     },
@@ -68,7 +66,6 @@ const Admin = ({ addToUndo = () => {} }) => {
   );
 
   const update = (key, _id) => (value) => {
-    console.log("value: ", value);
     mutation.mutate({
       _id,
       [key]: value,
@@ -150,8 +147,8 @@ const Admin = ({ addToUndo = () => {} }) => {
             key: "documents",
             render: (documents, { _id }) => (
               <Documents
-                isLoadingDocuments={isLoadingDocuments}
-                errorOfDocuments={errorOfDocuments}
+                isLoading={isLoadingDocuments}
+                error={errorOfDocuments}
                 update={update("documents", _id)}
                 documents={documents}
                 documentOptions={documentOptions}
@@ -207,7 +204,7 @@ const Admin = ({ addToUndo = () => {} }) => {
         ]}
         dataSource={dataWithKey}
       />
-      <AddToken refetch={refetch} />
+      <AddToken refetch={refetch} documentOptions={documentOptions} />
     </Wrapper>
   );
 };

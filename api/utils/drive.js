@@ -1,19 +1,12 @@
 const { google } = require("googleapis");
+const { oAuth2Client } = require("./auth");
 
-const refreshToken =
-  "1//048oHbjuX0dUICgYIARAAGAQSNwF-L9IrcTk5Xy8w64lLT-9ycuGWyfRbTb1U4vpiplpguBl6cvZJHp7bPMlW5WHvftmIEHHsX2M";
-
-const oAuth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_AUTH_CLIENT_ID,
-  process.env.GOOGLE_AUTH_CLIENT_SECRET,
-  process.env.REDIRECT_URL
-);
-oAuth2Client.setCredentials({ refresh_token: refreshToken });
 const drive = google.drive({ version: "v3", auth: oAuth2Client });
 
-const getFolderContent = async () => {
+const getFolderContent = async (refreshToken) => {
+  oAuth2Client.setCredentials({ refresh_token: refreshToken });
   const folderRes = await drive.files.list({
-    q: `mimeType = 'application/vnd.google-apps.folder' and fullText contains '${process.env.G_DRIVE_FOLDER}'`,
+    q: `mimeType = 'application/vnd.google-apps.folder' and fullText contains '${process.env.GOOGLE_DRIVE_FOLDER}'`,
   });
   if (folderRes.data.files.length === 0) {
     return [];
@@ -31,7 +24,8 @@ const getFolderContent = async () => {
   return filesRes.data.files;
 };
 
-const getFiles = async (fileIds = ["151PflLMd27MjqkgRZc3Fw98dD0g7SEDN"]) => {
+const getFiles = async (refreshToken, fileIds) => {
+  oAuth2Client.setCredentials({ refresh_token: refreshToken });
   const fileResponses = await Promise.allSettled(
     fileIds.map((fileId) =>
       drive.files.get(
