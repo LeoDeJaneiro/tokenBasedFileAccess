@@ -14,30 +14,27 @@ const getDocuments = async (req, res) => {
   }
 };
 
-const getDocument = async (req, res) => {
+const getDocumentsForToken = async (req, res) => {
   try {
     const { documents, error } = await isTokenValid(req.params.tokenId);
+    let files;
     if (error) {
-      return res.status(400).json({ error });
-    } else if (documents) {
-      await increaseTokenUsageCount(req.params.tokenId);
-      const { files, error } = await getFiles(documents);
-      if (error) {
-        throw new Error(error);
-      } else {
-        res.json(files);
-      }
+      res.status(400).json({ error });
+    } else if (documents?.length > 0) {
+      files = await getFiles(documents);
     } else {
-      res.json([]);
+      files = [];
     }
+    await increaseTokenUsageCount(req.params.tokenId);
+    res.json(files);
   } catch (error) {
-    console.error("error: ", error);
+    console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-// this route uses token for auth
-router.get("/:tokenId", getDocument);
+// token-based authorization
+router.get("/:tokenId", getDocumentsForToken);
 
 router.use(isAuthorizedMiddleware);
 router.get("/", getDocuments);

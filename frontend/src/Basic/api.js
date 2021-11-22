@@ -17,15 +17,14 @@ axios.interceptors.response.use(
   }
 );
 
-const handleResponse = async (response) => {
-  return response
-    .then((data) => {
-      return data?.data;
+const handleResponse = async (response) =>
+  response
+    .then((response) => {
+      return response?.data;
     })
     .catch((error) => {
       console.error(error);
     });
-};
 
 const getTokens = (page) => async () => {
   const data = await handleResponse(
@@ -43,6 +42,15 @@ const getDocuments = async () =>
     axios({
       url: `${backend}/document`,
       withCredentials: true,
+    })
+  );
+
+const getDocumentsForToken = (token) => async () =>
+  await handleResponse(
+    axios({
+      url: `${backend}/document/${token}`,
+      withCredentials: true,
+      // responseType: "arraybuffer",
     })
   );
 
@@ -81,5 +89,6 @@ export {
   updateToken,
   deleteToken,
   getDocuments,
+  getDocumentsForToken,
   backend,
 };

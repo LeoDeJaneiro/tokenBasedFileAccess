@@ -1,6 +1,7 @@
 const { google } = require("googleapis");
-const { oAuth2Client } = require("./auth");
+const _ = require("lodash");
 
+const { oAuth2Client } = require("./auth");
 const drive = google.drive({ version: "v3", auth: oAuth2Client });
 
 const getFolderContent = async (refreshToken) => {
@@ -26,32 +27,52 @@ const getFolderContent = async (refreshToken) => {
 
 const getFiles = async (fileIds) => {
   if (!process.env.REFRESH_TOKEN) {
-    return { error: "REFRESH_TOKEN is missing" };
+    throw new Error("REFRESH_TOKEN is missing");
   }
   oAuth2Client.setCredentials({ refresh_token: process.env.REFRESH_TOKEN });
-  const fileResponses = await Promise.allSettled(
-    fileIds?.map((fileId) =>
-      drive.files.get(
-        {
+
+  const fileResponses = await Promise.allSettled([
+    // file metadata
+    Promise.allSettled(
+      fileIds?.map((fileId) =>
+        drive.files.get({
           fileId,
-          alt: "media",
-        },
-        { responseType: "stream" }
+        })
       )
-    )
-  );
-  if (fileResponses.some((res) => res.status === "rejected")) {
-    return { error: "rejected" };
-  }
-  return {
-    files: fileResponses?.map(
-      (response) =>
-        response.status === "fulfilled" && {
-          data: response.value.data,
-          headers: response.value.headers,
-        }
     ),
-  };
+    // file buffer
+    Promise.allSettled(
+      fileIds?.map((fileId) =>
+        drive.files.get(
+          {
+            fileId,
+            alt: "media",
+          },
+          { responseType: "stream" }
+        )
+      )
+    ),
+  ]);
+
+  if (
+    _.chain(fileResponses)
+      .first()
+      .get("value")
+      .value()
+      .some((res) => res.status === "rejected")
+  ) {
+    throw new Error("rejected authorization");
+  }
+
+  const filesWithMeta = _.zipWith(
+    ...fileResponses.map((response) => response.value),
+    (metadataRes, dataRes) => ({
+      name: metadataRes.value.data.name,
+      mimeType: metadataRes.value.data.mimeType,
+      fileBuffer: dataRes.value.data,
+    })
+  );
+  return filesWithMeta;
 };
 
 module.exports = { getFiles, getFolderContent };

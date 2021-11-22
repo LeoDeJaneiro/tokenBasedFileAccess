@@ -70,7 +70,7 @@ const AddToken = ({ refetch, documentOptions }) => {
       }
       trigger="click"
     >
-      <Button icon={<PlusOutlined />}>Add token</Button>
+      <Button icon={<PlusOutlined />}>Add Access-token</Button>
     </Popover>
   );
 };
