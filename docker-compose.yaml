@@ -70,7 +70,8 @@ services:
       - 3000:3000
     build:
       args:
-        REACT_APP_API: $BACKEND_HOST
+        REACT_APP_API: ${BACKEND_HOST}
+        REACT_APP_GOOGLE_DRIVE_FOLDER: ${GOOGLE_DRIVE_FOLDER}
       context: frontend
     restart: always
     networks:

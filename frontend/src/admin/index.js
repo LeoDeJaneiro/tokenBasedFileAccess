@@ -9,10 +9,11 @@ import {
   Switch,
 } from "antd";
 import {
-  CloseCircleOutlined,
+  DeleteOutlined,
   CopyOutlined,
   DisconnectOutlined,
   LinkOutlined,
+  InfoCircleOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 import { useQuery, useMutation } from "react-query";
@@ -147,7 +148,23 @@ const Admin = ({ addToUndo = () => {} }) => {
             ),
           },
           {
-            title: "Documents",
+            title: (
+              <>
+                Documents
+                <Tooltip
+                  trigger="click"
+                  title={`Select documents from your Google Drive folder "${
+                    process.env.REACT_APP_GOOGLE_DRIVE_FOLDER || ""
+                  }" to enable token-based access. An internal ID is used for the assignment so that, as a result, future renaming of documents is possible without loosing assignment. However, it is not possible to keep a document-assignment, if a file gets replaced by another one with the same name.`}
+                >
+                  <Button
+                    type="link"
+                    shape="circle"
+                    icon={<InfoCircleOutlined />}
+                  />
+                </Tooltip>
+              </>
+            ),
             dataIndex: "documents",
             key: "documents",
             render: (documents, { _id }) => (
@@ -198,7 +215,7 @@ const Admin = ({ addToUndo = () => {} }) => {
                     type="text"
                     danger
                     shape="circle"
-                    icon={<CloseCircleOutlined />}
+                    icon={<DeleteOutlined />}
                   />
                 </Popconfirm>
               </Space>
