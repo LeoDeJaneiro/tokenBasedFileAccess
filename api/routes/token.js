@@ -7,29 +7,29 @@ const Token = require("../utils/tokenModel");
 const { getTokenById } = require("../utils/token");
 
 const get = async (req, res, next) => {
-  if (req.params.tokenId) {
-    const token = await getTokenById(req.params.tokenId).catch(next);
-    res.json(token);
-  } else {
-    const [
-      {
-        result,
-        totalCount: [{ totalCount }],
+  const token = await getTokenById(req.params.tokenId).catch(next);
+  res.json(token);
+};
+
+const getTokens = async (req, res, next) => {
+  const [
+    {
+      result,
+      totalCount: [{ totalCount }],
+    },
+  ] = await Token.aggregate([
+    {
+      $facet: {
+        result: [
+          { $sort: { createdAt: -1 } },
+          { $skip: ((req.query.page || 1) - 1) * 10 },
+          { $limit: 10 },
+        ],
+        totalCount: [{ $count: "totalCount" }],
       },
-    ] = await Token.aggregate([
-      {
-        $facet: {
-          result: [
-            { $sort: { createdAt: -1 } },
-            { $skip: ((req.query.page || 1) - 1) * 10 },
-            { $limit: 10 },
-          ],
-          totalCount: [{ $count: "totalCount" }],
-        },
-      },
-    ]);
-    res.json({ result, totalCount });
-  }
+    },
+  ]);
+  res.json({ result, totalCount });
 };
 
 const post = async (req, res, next) => {
@@ -37,8 +37,9 @@ const post = async (req, res, next) => {
     ? req.body.expiresAt
     : moment().add(21, "days");
   const token = new Token({
-    user: req.body.user,
+    title: req.body.title,
     expiresAt,
+    ...(req.body.documents ? { documents: req.body.documents } : {}),
   });
   token.save().catch(next);
   res.json(token);
@@ -56,15 +57,18 @@ const remove = async (req, res, next) => {
   res.json({ message: "success" });
 };
 
+// this route is open
+router.get("/:tokenId", get);
+
 router.use(isAuthorizedMiddleware);
 
-router.get("/", get);
-router.get("/:tokenId", get);
+router.get("/", getTokens);
 router.post("/", post);
 router.put("/:tokenId", update);
 router.delete("/:tokenId", remove);
 
 router.use((error, req, res, next) => {
+  console.log("error: ", error);
   if (error.toString().startsWith("CastError: Cast to ObjectId failed")) {
     return res.status(400).json({ error: "unknown token" });
   }

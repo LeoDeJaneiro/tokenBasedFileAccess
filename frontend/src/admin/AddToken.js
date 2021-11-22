@@ -1,39 +1,39 @@
 import { useState } from "react";
 import { Space, Button, notification, DatePicker, Popover, Input } from "antd";
-import { SaveOutlined, PlusOutlined, UserOutlined } from "@ant-design/icons";
+import { SaveOutlined, PlusOutlined } from "@ant-design/icons";
 import moment from "moment";
 
 import { postToken } from "../Basic/api";
 import Documents from "./Documents";
 
-const defaultExpiration = moment();
+const defaultExpiration = moment().add(14, "days");
 const dateFormat = "dddd, MM/DD/YY, h:mm a";
 const notificationConfig = { placement: "bottomRight", duration: 2 };
 
 const AddToken = ({ refetch, documentOptions }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [user, setUser] = useState(null);
+  const [title, setTitle] = useState(null);
   const [expiresAt, setExpiresAt] = useState(defaultExpiration);
   const [documents, setDocuments] = useState([]);
 
-  const setUserValue = (event) => setUser(event.target.value);
+  const setTitleValue = (event) => setTitle(event.target.value);
 
   const add = async () => {
-    if (user && expiresAt) {
-      try {
-        await postToken({ user, expiresAt, documents });
-        setIsVisible(false);
+    if (title && expiresAt) {
+      const token = await postToken({ title, expiresAt, documents });
+      if (!token) {
+        notification.error({
+          ...notificationConfig,
+          message: "Error on Token creation",
+        });
+      } else {
         refetch();
         notification.success({
           ...notificationConfig,
-          message: "New Token has been created",
-        });
-      } catch (err) {
-        notification.error({
-          ...notificationConfig,
-          message: "New Token has been created",
+          message: `New Token >>${token.title}<< has been created`,
         });
       }
+      setIsVisible(false);
     }
   };
 
@@ -46,14 +46,11 @@ const AddToken = ({ refetch, documentOptions }) => {
       onVisibleChange={toggleIsVisible}
       content={
         <Space>
-          <Input
-            placeholder="User"
-            onChange={setUserValue}
-            prefix={<UserOutlined />}
-          />
+          <Input placeholder="Title" onChange={setTitleValue} />
           <DatePicker
             showTime
             onChange={setExpiresAt}
+            value={expiresAt}
             format={dateFormat}
             placeholder="Expiration Date"
           />
@@ -67,6 +64,7 @@ const AddToken = ({ refetch, documentOptions }) => {
             shape="circle"
             icon={<SaveOutlined />}
             onClick={add}
+            disabled={!expiresAt || !title}
           />
         </Space>
       }

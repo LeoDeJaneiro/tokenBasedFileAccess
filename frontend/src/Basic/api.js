@@ -46,21 +46,18 @@ const getDocuments = async () =>
     })
   );
 
-const postToken = ({ user, expiresAt }) =>
-  handleResponse(
+const postToken = async (token) =>
+  await handleResponse(
     axios({
       method: "post",
       url: `${backend}/token`,
-      data: {
-        user,
-        expiresAt,
-      },
+      data: token,
       withCredentials: true,
     })
   );
 
-const updateToken = ({ _id, mutation }) =>
-  handleResponse(
+const updateToken = async ({ _id, mutation }) =>
+  await handleResponse(
     axios({
       method: "put",
       url: `${backend}/token/${_id}`,
@@ -69,8 +66,8 @@ const updateToken = ({ _id, mutation }) =>
     })
   );
 
-const deleteToken = (_id) =>
-  handleResponse(
+const deleteToken = async (_id) =>
+  await handleResponse(
     axios({
       method: "delete",
       url: `${backend}/token/${_id}`,

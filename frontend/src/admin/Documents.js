@@ -1,6 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
-import { Tag, Button } from "antd";
-import { FilePdfOutlined, FileOutlined, SaveOutlined } from "@ant-design/icons";
+import { useMemo } from "react";
+import { Tag } from "antd";
+import {
+  FilePdfOutlined,
+  FileOutlined,
+  FileExclamationOutlined,
+} from "@ant-design/icons";
 import { Select } from "antd";
 import { CloudOutlined } from "@ant-design/icons";
 import styled from "styled-components";
@@ -8,21 +12,30 @@ import _ from "lodash";
 
 import Flex from "../Basic/Flex";
 
-const Document = ({ mimeType, name }) => {
-  switch (mimeType) {
-    case "application/pdf":
-      return <Tag icon={<FilePdfOutlined />}>{name}</Tag>;
-    default:
-      return <Tag icon={<FileOutlined />}>{name}</Tag>;
-  }
-};
-
 const Wrapper = styled(Flex)`
   width: 370px;
 `;
 const DocumentAssign = styled(Select)`
   width: 350px;
 `;
+const Warning = styled.span`
+  color: red;
+`;
+
+const Document = ({ mimeType, name }) => {
+  switch (mimeType) {
+    case "application/pdf":
+      return <Tag icon={<FilePdfOutlined />}>{name}</Tag>;
+    case "missingFile":
+      return (
+        <Tag icon={<FileExclamationOutlined />}>
+          <Warning>missing file</Warning>
+        </Tag>
+      );
+    default:
+      return <Tag icon={<FileOutlined />}>{name}</Tag>;
+  }
+};
 
 const Documents = ({
   isLoading,
@@ -31,48 +44,50 @@ const Documents = ({
   documents,
   documentOptions,
 }) => {
-  const [newDocumentIds, setNewDocumentIds] = useState(documents);
-  const newDocuments = useMemo(() => {
-    if (newDocumentIds) {
-      return newDocumentIds.map((id) => _.find(documentOptions, { id }));
+  const extendedDocumentOptions = useMemo(() => {
+    if (documents && documentOptions) {
+      const missingFiles = documents.filter(
+        (selectedId) => !documentOptions.find(({ id }) => selectedId === id)
+      );
+      if (missingFiles.length > 0) {
+        return [
+          ...documentOptions,
+          ...missingFiles.map((fileId) => ({
+            id: fileId,
+            mimeType: "missingFile",
+          })),
+        ];
+      } else {
+        return documentOptions;
+      }
+    } else {
+      return documentOptions;
     }
-  }, [newDocumentIds, documentOptions]);
-  const saveUpdate = () => {
-    update(newDocumentIds);
-  };
+  }, [documentOptions, documents]);
 
-  useEffect(() => {
-    if (_.isEqual(newDocuments, documents)) {
-      setNewDocumentIds(null);
-    }
-  }, [documents, newDocuments]);
+  const newDocuments = useMemo(
+    () => documents?.map((id) => _.find(extendedDocumentOptions, { id })),
+    [documents, extendedDocumentOptions]
+  );
 
   return (
     <Wrapper start>
       <DocumentAssign
         value={newDocuments?.map((file) => file?.id)}
         mode="multiple"
-        onChange={setNewDocumentIds}
+        onChange={update}
         size="large"
         suffixIcon={<CloudOutlined />}
         loading={isLoading}
         disabled={error}
         placeholder={error ? "Error loading drive" : ""}
       >
-        {documentOptions?.map(({ id, name, mimeType }) => (
+        {extendedDocumentOptions?.map(({ id, name, mimeType }) => (
           <Select.Option key={id} value={id}>
             <Document name={name} mimeType={mimeType} />
           </Select.Option>
         ))}
       </DocumentAssign>
-      {!_.isEqual(newDocumentIds, documents) && (
-        <Button
-          type="link"
-          shape="circle"
-          icon={<SaveOutlined />}
-          onClick={saveUpdate}
-        />
-      )}
     </Wrapper>
   );
 };

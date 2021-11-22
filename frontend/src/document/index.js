@@ -8,23 +8,37 @@ const Document = () => {
   const { isLoading, error, data } = useQuery("doc", () =>
     fetch(
       `${
-        process.env.REACT_APP_SECRET_NAME || "http://localhost:36912"
+        process.env.BACKEND_HOST || "http://localhost:36912"
       }/api/v1/document/${token}`
     ).then((res) => res.json())
   );
-  if (isLoading)
+  if (isLoading) {
     return (
       <Flex>
         <Spin size="large" />
       </Flex>
     );
-  if (error) return <Flex>An error has occurred: {error?.message}</Flex>;
-  if (data?.error)
-    return (
-      <Flex>
-        <h2>Token is {data.error}.</h2>
-      </Flex>
-    );
+  }
+  if (error) {
+    return <Flex>An error has occurred: {error?.message}</Flex>;
+  }
+  if (data?.error) {
+    switch (data.error) {
+      case "Internal Server Error":
+        return (
+          <Flex>
+            <h2>{data.error}</h2>
+          </Flex>
+        );
+      default:
+        return (
+          <Flex>
+            <h2>Token is {data.error}.</h2>
+          </Flex>
+        );
+    }
+  }
+
   return <div>doc</div>;
 };
 export default Document;

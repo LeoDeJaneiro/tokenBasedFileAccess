@@ -73,10 +73,16 @@ const Admin = ({ addToUndo = () => {} }) => {
     let message;
     switch (key) {
       case "isRejected":
-        message = `Token has been ${value ? "activated" : "rejected"}`;
+        message = `Token has been ${value ? "rejected" : "activated"}`;
+        break;
+      case "expiresAt":
+        message = `Expiration date has been updated`;
+        break;
+      case "documents":
+        message = `Documents have been updated`;
         break;
       default:
-        message = `Expiration date has been updated`;
+        message = `Token has been updated`;
         break;
     }
     notification.success({
@@ -86,7 +92,7 @@ const Admin = ({ addToUndo = () => {} }) => {
   };
 
   const reject = (_id) => (isRejected) => {
-    update("isRejected", _id)(isRejected);
+    update("isRejected", _id)(!isRejected);
   };
 
   const remove = (_id) => () => {
@@ -119,11 +125,10 @@ const Admin = ({ addToUndo = () => {} }) => {
         }}
         columns={[
           {
-            title: "User",
-            dataIndex: "user",
-            key: "user",
+            title: "Title",
+            dataIndex: "title",
+            key: "title",
             render: (text) => <>{text}</>,
-            onFilter: (value, record) => record.name.indexOf(value) === 0,
           },
           {
             title: "Expiration Date",
@@ -179,7 +184,7 @@ const Admin = ({ addToUndo = () => {} }) => {
                   <Switch
                     checkedChildren={<LinkOutlined />}
                     unCheckedChildren={<DisconnectOutlined />}
-                    checked={isRejected}
+                    checked={!isRejected}
                     onChange={reject(_id)}
                   />
                 </Tooltip>
@@ -189,14 +194,12 @@ const Admin = ({ addToUndo = () => {} }) => {
                   okText="Yes"
                   cancelText="No"
                 >
-                  <Tooltip title="Delete token">
-                    <Button
-                      type="text"
-                      danger
-                      shape="circle"
-                      icon={<CloseCircleOutlined />}
-                    />
-                  </Tooltip>
+                  <Button
+                    type="text"
+                    danger
+                    shape="circle"
+                    icon={<CloseCircleOutlined />}
+                  />
                 </Popconfirm>
               </Space>
             ),

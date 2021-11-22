@@ -14,7 +14,7 @@ const getFolderContent = async (refreshToken) => {
   const folderId = folderRes.data.files[0].id;
   const filesRes = await drive.files.list({
     orderBy: "name, modifiedTime desc",
-    q: `parents in '${folderId}'`,
+    q: `parents in '${folderId}' and not mimeType = 'application/vnd.google-apps.folder'`,
   });
   if (filesRes.errors) {
     throw new Error(
@@ -24,10 +24,13 @@ const getFolderContent = async (refreshToken) => {
   return filesRes.data.files;
 };
 
-const getFiles = async (refreshToken, fileIds) => {
-  oAuth2Client.setCredentials({ refresh_token: refreshToken });
+const getFiles = async (fileIds) => {
+  if (!process.env.REFRESH_TOKEN) {
+    return { error: "REFRESH_TOKEN is missing" };
+  }
+  oAuth2Client.setCredentials({ refresh_token: process.env.REFRESH_TOKEN });
   const fileResponses = await Promise.allSettled(
-    fileIds.map((fileId) =>
+    fileIds?.map((fileId) =>
       drive.files.get(
         {
           fileId,
@@ -37,13 +40,18 @@ const getFiles = async (refreshToken, fileIds) => {
       )
     )
   );
-  return fileResponses.map(
-    (response) =>
-      response.status === "fulfilled" && {
-        data: response.value.data,
-        headers: response.value.headers,
-      }
-  );
+  if (fileResponses.some((res) => res.status === "rejected")) {
+    return { error: "rejected" };
+  }
+  return {
+    files: fileResponses?.map(
+      (response) =>
+        response.status === "fulfilled" && {
+          data: response.value.data,
+          headers: response.value.headers,
+        }
+    ),
+  };
 };
 
 module.exports = { getFiles, getFolderContent };

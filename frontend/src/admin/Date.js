@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
 import { Tooltip, Button, DatePicker } from "antd";
-import { EditOutlined, SaveOutlined } from "@ant-design/icons";
+import { EditOutlined } from "@ant-design/icons";
 import moment from "moment";
 import styled from "styled-components";
+import _ from "lodash";
 
 import Flex from "../Basic/Flex";
 
@@ -17,19 +18,20 @@ const Expiration = styled.span`
   color: red;
 `;
 
-const now = moment();
-
 const Date = ({ update, expiresAt }) => {
   const [isEditingDate, setIsEditingDate] = useState(false);
-  const [newDate, setNewDate] = useState(expiresAt);
-  const date = useMemo(() => moment(newDate), [newDate]);
 
   const toggleDateEdit = () =>
     setIsEditingDate((prevIsEditingDate) => !prevIsEditingDate);
 
-  const saveUpdate = () => {
-    update(newDate);
-    toggleDateEdit();
+  const dateObject = useMemo(() => {
+    return moment(expiresAt);
+  }, [expiresAt]);
+
+  const saveUpdate = (date) => {
+    if (!_.isEqual(moment(expiresAt), date)) {
+      update(date);
+    }
   };
 
   return (
@@ -37,28 +39,23 @@ const Date = ({ update, expiresAt }) => {
       {isEditingDate ? (
         <DatePicker
           showTime
-          onChange={setNewDate}
-          value={date}
           format={dateFormat}
           allowClear={false}
+          onOk={saveUpdate}
+          onOpenChange={toggleDateEdit}
+          open={isEditingDate}
+          showNow={false}
         />
-      ) : date.isBefore(now) ? (
+      ) : dateObject?.isBefore(moment()) ? (
         <Tooltip title="Expired!">
           <Expiration onClick={toggleDateEdit}>
-            {date.format(dateFormat)}
+            {dateObject?.format(dateFormat)}
           </Expiration>
         </Tooltip>
       ) : (
-        <span onClick={toggleDateEdit}>{date.format(dateFormat)}</span>
+        <span onClick={toggleDateEdit}>{dateObject?.format(dateFormat)}</span>
       )}
-      {isEditingDate ? (
-        <Button
-          type="link"
-          shape="circle"
-          icon={<SaveOutlined />}
-          onClick={saveUpdate}
-        />
-      ) : (
+      {!isEditingDate && (
         <Tooltip title="Edit expiration date">
           <Button
             type="link"
