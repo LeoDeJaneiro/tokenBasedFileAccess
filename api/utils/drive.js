@@ -1,6 +1,6 @@
 const { google } = require("googleapis");
 const _ = require("lodash");
-
+const zlib = require("zlib");
 const { oAuth2Client } = require("./auth");
 const drive = google.drive({ version: "v3", auth: oAuth2Client });
 
@@ -25,54 +25,55 @@ const getFolderContent = async (refreshToken) => {
   return filesRes.data.files;
 };
 
-const getFiles = async (fileIds) => {
+const setToken = () => {
   if (!process.env.REFRESH_TOKEN) {
     throw new Error("REFRESH_TOKEN is missing");
   }
   oAuth2Client.setCredentials({ refresh_token: process.env.REFRESH_TOKEN });
-
-  const fileResponses = await Promise.allSettled([
-    // file metadata
-    Promise.allSettled(
-      fileIds?.map((fileId) =>
-        drive.files.get({
-          fileId,
-        })
-      )
-    ),
-    // file buffer
-    Promise.allSettled(
-      fileIds?.map((fileId) =>
-        drive.files.get(
-          {
-            fileId,
-            alt: "media",
-          },
-          { responseType: "stream" }
-        )
-      )
-    ),
-  ]);
-
-  if (
-    _.chain(fileResponses)
-      .first()
-      .get("value")
-      .value()
-      .some((res) => res.status === "rejected")
-  ) {
-    throw new Error("rejected authorization");
-  }
-
-  const filesWithMeta = _.zipWith(
-    ...fileResponses.map((response) => response.value),
-    (metadataRes, dataRes) => ({
-      name: metadataRes.value.data.name,
-      mimeType: metadataRes.value.data.mimeType,
-      fileBuffer: dataRes.value.data,
-    })
-  );
-  return filesWithMeta;
 };
 
-module.exports = { getFiles, getFolderContent };
+const getFilesMetaData = async (fileIds) => {
+  setToken();
+  const metadataResponses = await Promise.allSettled(
+    fileIds?.map((fileId) =>
+      drive.files.get({
+        fileId,
+      })
+    )
+  );
+
+  return metadataResponses.map((response) => {
+    if (response.status === "rejected") {
+      throw new Error("rejected authorization");
+    }
+    return response.value.data;
+  });
+};
+
+const getFile = async (fileId) => {
+  setToken();
+  return new Promise(async (resolve, reject) => {
+    const fileStream = await drive.files.get(
+      {
+        fileId,
+        alt: "media",
+      },
+      { responseType: "stream" }
+    );
+
+    const chunks = [];
+    fileStream.data
+      .on("end", () => {
+        const fileBuffer = Buffer.concat(chunks);
+        resolve(fileBuffer);
+      })
+      .on("error", (err) => {
+        reject(err);
+      })
+      .on("data", (chunk) => {
+        chunks.push(chunk);
+      });
+  });
+};
+
+module.exports = { getFilesMetaData, getFile, getFolderContent };

@@ -12,24 +12,28 @@ const get = async (req, res, next) => {
 };
 
 const getTokens = async (req, res, next) => {
-  const [
-    {
-      result,
-      totalCount: [{ totalCount }],
-    },
-  ] = await Token.aggregate([
-    {
-      $facet: {
-        result: [
-          { $sort: { createdAt: -1 } },
-          { $skip: ((req.query.page || 1) - 1) * 10 },
-          { $limit: 10 },
-        ],
-        totalCount: [{ $count: "totalCount" }],
+  try {
+    const [
+      {
+        result,
+        totalCount: [{ totalCount }],
       },
-    },
-  ]);
-  res.json({ result, totalCount });
+    ] = await Token.aggregate([
+      {
+        $facet: {
+          result: [
+            { $sort: { createdAt: -1 } },
+            { $skip: ((req.query.page || 1) - 1) * 10 },
+            { $limit: 10 },
+          ],
+          totalCount: [{ $count: "totalCount" }],
+        },
+      },
+    ]);
+    res.json({ result, totalCount });
+  } catch {
+    res.json({ result: [], totalCount: 0 });
+  }
 };
 
 const post = async (req, res, next) => {
@@ -57,18 +61,15 @@ const remove = async (req, res, next) => {
   res.json({ message: "success" });
 };
 
-// this route is open
-router.get("/:tokenId", get);
-
 router.use(isAuthorizedMiddleware);
 
 router.get("/", getTokens);
+router.get("/:tokenId", get);
 router.post("/", post);
 router.put("/:tokenId", update);
 router.delete("/:tokenId", remove);
 
 router.use((error, req, res, next) => {
-  console.log("error: ", error);
   if (error.toString().startsWith("CastError: Cast to ObjectId failed")) {
     return res.status(400).json({ error: "unknown token" });
   }

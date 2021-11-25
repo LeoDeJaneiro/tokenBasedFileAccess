@@ -26,6 +26,32 @@ const handleResponse = async (response) =>
       console.error(error);
     });
 
+const getAccess = (token) => async () =>
+  await handleResponse(
+    axios({
+      url: `${backend}/access`,
+      params: { token },
+    })
+  );
+
+const getFileAccess = async ({ token, documentId }) =>
+  await handleResponse(
+    axios({
+      url: `${backend}/access/${documentId}`,
+      params: { token },
+      responseType: "blob",
+      decompress: true,
+    })
+  );
+
+const getDocuments = async () =>
+  await handleResponse(
+    axios({
+      url: `${backend}/document`,
+      withCredentials: true,
+    })
+  );
+
 const getTokens = (page) => async () => {
   const data = await handleResponse(
     axios({
@@ -36,23 +62,6 @@ const getTokens = (page) => async () => {
   );
   return data?.result;
 };
-
-const getDocuments = async () =>
-  await handleResponse(
-    axios({
-      url: `${backend}/document`,
-      withCredentials: true,
-    })
-  );
-
-const getDocumentsForToken = (token) => async () =>
-  await handleResponse(
-    axios({
-      url: `${backend}/document/${token}`,
-      withCredentials: true,
-      // responseType: "arraybuffer",
-    })
-  );
 
 const postToken = async (token) =>
   await handleResponse(
@@ -89,6 +98,7 @@ export {
   updateToken,
   deleteToken,
   getDocuments,
-  getDocumentsForToken,
+  getAccess,
+  getFileAccess,
   backend,
 };

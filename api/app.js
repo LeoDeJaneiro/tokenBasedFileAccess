@@ -16,6 +16,7 @@ const authRouter = require("./routes/auth");
 const indexRouter = require("./routes/index");
 const tokenRouter = require("./routes/token");
 const documentRouter = require("./routes/document");
+const accessRouter = require("./routes/access");
 
 const app = express();
 db.connect(process.env.MONGO_CONNECTION);
@@ -64,6 +65,7 @@ app.use("/", indexRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/token", tokenRouter);
 app.use("/api/v1/document", documentRouter);
+app.use("/api/v1/access", accessRouter);
 
 app.use(function (req, res, next) {
   next(createError(404));

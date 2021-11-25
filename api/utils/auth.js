@@ -2,7 +2,7 @@ const { google } = require("googleapis");
 var jwt = require("jsonwebtoken");
 
 const authorizedUsers = process.env.AUTHORIZED_MAIL_ADDRESSES.split(",");
-const authorizedRoute = `${process.env.FRONTEND_HOST}/${process.env.FRONTEND_SUCCESS_ROUTE}`;
+const authorizedRoute = `${process.env.FRONTEND_HOST}${process.env.ADMIN_ROUTE}`;
 const cookieTitle = "tokenDocAccess";
 
 const oAuth2Client = new google.auth.OAuth2(
