@@ -34,15 +34,20 @@ const getAccess = (token) => async () =>
     })
   );
 
-const getFileAccess = async ({ token, documentId }) =>
-  await handleResponse(
-    axios({
-      url: `${backend}/access/${documentId}`,
-      params: { token },
-      responseType: "blob",
-      decompress: true,
-    })
-  );
+const getFileAccess =
+  ({ token, documentId }) =>
+  async () =>
+    await handleResponse(
+      axios({
+        url: `${backend}/access/${documentId}`,
+        params: { token },
+        responseType: "blob",
+        decompress: true,
+        headers: {
+          Accept: "application/pdf",
+        },
+      })
+    );
 
 const getDocuments = async () =>
   await handleResponse(
