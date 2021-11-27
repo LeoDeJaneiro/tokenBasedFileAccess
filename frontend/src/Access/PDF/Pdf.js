@@ -1,16 +1,25 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, createRef } from "react";
 import { useQuery } from "react-query";
 import { Spin } from "antd";
+import _ from "lodash";
 import { Document, Page, pdfjs } from "react-pdf/dist/esm/entry.webpack";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 
-import Flex from "../Basic/Flex";
-import { getFileAccess } from "../Basic/api";
+import Flex from "../../Basic/Flex";
+import { getFileAccess } from "../../Basic/api";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
-const PDF = ({ id, token, name }) => {
-  const [pages, setPages] = useState(0);
+const Pdf = ({ id, token, name }) => {
+  const [numPages, setNumPages] = useState(0);
+  const refs = useMemo(
+    () =>
+      new Array(numPages)
+        .fill()
+        .reduce((acc, _, index) => ({ ...acc, [index + 1]: createRef() }), {}),
+    [numPages]
+  );
+
   const { isLoading, error, data } = useQuery(
     "pdf",
     getFileAccess({ documentId: id, token }),
@@ -27,12 +36,14 @@ const PDF = ({ id, token, name }) => {
   }, [data]);
 
   const handleLoadSuccess = ({ numPages }) => {
-    setPages(numPages);
+    setNumPages(numPages);
   };
 
-  const onItemClick = ({ pageNumber: itemPageNumber }) => {
-    console.log("itemPageNumber: ", itemPageNumber);
-    setPages(itemPageNumber);
+  const onItemClick = ({ pageNumber }) => {
+    refs[pageNumber].current.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   };
 
   if (isLoading || (!url && !error)) {
@@ -75,9 +86,9 @@ const PDF = ({ id, token, name }) => {
         onGetAnnotationsError={console.error}
         onItemClick={onItemClick}
       >
-        {new Array(pages).fill().map((_, index) => (
-          <div>
-            <Page pageNumber={index + 1 || 1} key={index} />
+        {_.map(refs, (_, index) => (
+          <div ref={refs[index]}>
+            <Page pageNumber={parseInt(index)} key={index} />
           </div>
         ))}
       </Document>
@@ -85,4 +96,4 @@ const PDF = ({ id, token, name }) => {
   );
 };
 
-export default PDF;
+export default Pdf;

@@ -3,17 +3,12 @@ import { useParams } from "react-router-dom";
 import { useQuery } from "react-query";
 import { Spin, Button } from "antd";
 import { CloudDownloadOutlined } from "@ant-design/icons";
-import { useMediaQueries } from "@react-hook/media-query";
 
-import Pdf from "./Pdf";
+import PDF from "./PDF";
 import Flex from "../Basic/Flex";
 import { getAccess, getFileAccess } from "../Basic/api";
 
 const DocumentForToken = () => {
-  const isDesktop = useMediaQueries({
-    screen: "screen",
-    width: "(min-width: 1335px)",
-  });
   const { token } = useParams();
   const { isLoading, error, data } = useQuery("access", getAccess(token), {
     refetchOnWindowFocus: false,
@@ -32,10 +27,6 @@ const DocumentForToken = () => {
       },
     [token]
   );
-
-  const handleMouseDown = (event) => {
-    console.log("event: ", event);
-  };
 
   if (isLoading) {
     return (
@@ -66,33 +57,25 @@ const DocumentForToken = () => {
     }
   }
 
-  return (
-    <Flex onMouseDown={handleMouseDown}>
-      <Flex column>
-        {data?.map(({ id, name, isDownloadable }) => {
-          return isDownloadable ? (
-            <Button
-              key={id}
-              icon={<CloudDownloadOutlined />}
-              onClick={handleDownload({
-                documentId: id,
-                name: name,
-              })}
-            >
-              {name}
-            </Button>
-          ) : isDesktop.matchesAll ? (
-            name.endsWith("desktop.pdf") && (
-              <Pdf token={token} id={id} key={id} name={name} />
-            )
-          ) : (
-            !name.endsWith("desktop.pdf") && (
-              <Pdf token={token} id={id} key={id} name={name} />
-            )
-          );
-        })}
-      </Flex>
-    </Flex>
+  return data?.isDownloadable ? (
+    data.files?.map(({ id, name }) => {
+      return (
+        <Flex column>
+          <Button
+            key={id}
+            icon={<CloudDownloadOutlined />}
+            onClick={handleDownload({
+              documentId: id,
+              name: name,
+            })}
+          >
+            {name}
+          </Button>
+        </Flex>
+      );
+    })
+  ) : (
+    <PDF files={data.files} token={token} />
   );
 };
 
