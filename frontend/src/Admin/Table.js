@@ -117,7 +117,7 @@ const AdminTable = ({
           title: "Link Usage",
           dataIndex: "usageCount",
           key: "usageCount",
-          render: (count) => <>{count}x</>,
+          render: (count) => <>{count}</>,
         },
         {
           title: "Actions",

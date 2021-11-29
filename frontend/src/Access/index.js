@@ -13,7 +13,6 @@ const DocumentForToken = () => {
   const { isLoading, error, data } = useQuery("access", getAccess(token), {
     refetchOnWindowFocus: false,
   });
-  console.log("data: ", data);
 
   const handleDownload = useCallback(
     ({ documentId, name }) =>

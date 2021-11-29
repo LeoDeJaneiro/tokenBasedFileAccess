@@ -16,7 +16,7 @@ passport.use(
       clientSecret: process.env.GOOGLE_AUTH_CLIENT_SECRET,
       callbackURL: `${process.env.BACKEND_HOST}/api/v1/auth/callback`,
     },
-    function (accessToken, refreshToken, profile, done) {
+    function (_accessToken, refreshToken, profile, done) {
       return done(null, {
         email: profile._json.email,
         given_name: profile._json.given_name,

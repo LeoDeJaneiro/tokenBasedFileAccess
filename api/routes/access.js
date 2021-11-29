@@ -12,8 +12,6 @@ const getAccess = async (req, res) => {
     await increaseTokenUsageCount(req.query.token);
 
     if (error) {
-      console.log("error");
-      console.log(error);
       res.status(400).json({ error });
     } else if (documents?.length > 0) {
       const meta = await getFilesMetaData(documents);
