@@ -30,6 +30,7 @@ const isTokenValid = async (tokenId) => {
     }
     return {
       documents: token.documents,
+      isDownloadable: token.isDownloadable,
     };
   } catch (err) {
     return {

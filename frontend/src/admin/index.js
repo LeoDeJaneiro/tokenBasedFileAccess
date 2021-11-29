@@ -54,11 +54,16 @@ const Admin = ({ addToUndo = () => {} }) => {
       case "isRejected":
         message = `Token has been ${value ? "rejected" : "activated"}`;
         break;
+      case "isDownloadable":
+        message = `Documents are ${
+          value ? "downloadable" : "not downloadable"
+        }`;
+        break;
       case "expiresAt":
         message = `Expiration date has been updated`;
         break;
       case "documents":
-        message = `Documents have been updated`;
+        message = `PDF-Documents have been updated`;
         break;
       default:
         message = `Token has been updated`;

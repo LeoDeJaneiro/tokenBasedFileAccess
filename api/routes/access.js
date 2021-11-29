@@ -6,18 +6,23 @@ const { getFilesMetaData, getFile } = require("../utils/drive");
 
 const getAccess = async (req, res) => {
   try {
-    const { documents, error } = await isTokenValid(req.query.token);
+    const { documents, isDownloadable, error } = await isTokenValid(
+      req.query.token
+    );
     await increaseTokenUsageCount(req.query.token);
 
     if (error) {
-      console.log('error')
-      console.log(error)
+      console.log("error");
+      console.log(error);
       res.status(400).json({ error });
     } else if (documents?.length > 0) {
       const meta = await getFilesMetaData(documents);
-      res.json(meta);
+      res.json({
+        files: meta,
+        ...(isDownloadable ? { isDownloadable: true } : {}),
+      });
     } else {
-      res.json([]);
+      res.json({ files: [] });
     }
   } catch (error) {
     console.error(error);

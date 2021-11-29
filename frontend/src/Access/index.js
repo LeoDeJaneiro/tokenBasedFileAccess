@@ -13,6 +13,7 @@ const DocumentForToken = () => {
   const { isLoading, error, data } = useQuery("access", getAccess(token), {
     refetchOnWindowFocus: false,
   });
+  console.log("data: ", data);
 
   const handleDownload = useCallback(
     ({ documentId, name }) =>
@@ -75,7 +76,7 @@ const DocumentForToken = () => {
       );
     })
   ) : (
-    <PDF files={data.files} token={token} />
+    <PDF files={data?.files} token={token} />
   );
 };
 

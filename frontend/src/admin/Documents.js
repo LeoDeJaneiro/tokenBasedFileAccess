@@ -44,6 +44,7 @@ const Documents = ({
   update,
   documents,
   documentOptions,
+  placeholder,
 }) => {
   const extendedDocumentOptions = useMemo(() => {
     if (documents && documentOptions) {
@@ -80,11 +81,10 @@ const Documents = ({
         value={newDocuments?.map((file) => file?.id)}
         mode="multiple"
         onChange={update}
-        size="large"
         suffixIcon={isLoading ? <LoadingOutlined /> : <CloudOutlined />}
         loading={isLoading}
         disabled={error}
-        placeholder={error ? "Error loading drive" : ""}
+        placeholder={error ? "Error loading drive" : placeholder ?? ""}
       >
         {extendedDocumentOptions?.map(({ id, name, mimeType }) => (
           <Select.Option key={id} value={id}>

@@ -18,13 +18,9 @@ axios.interceptors.response.use(
 );
 
 const handleResponse = async (response) =>
-  response
-    .then((response) => {
-      return response?.data;
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+  response.then((response) => {
+    return response?.data;
+  });
 
 const getAccess = (token) => async () =>
   await handleResponse(

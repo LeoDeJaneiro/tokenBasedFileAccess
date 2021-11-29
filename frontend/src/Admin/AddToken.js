@@ -1,10 +1,29 @@
 import { useState } from "react";
-import { Space, Button, notification, DatePicker, Popover, Input } from "antd";
-import { SaveOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  Space,
+  Button,
+  notification,
+  DatePicker,
+  Popover,
+  Input,
+  Tooltip,
+  Switch,
+} from "antd";
+import {
+  SaveOutlined,
+  PlusOutlined,
+  CloudDownloadOutlined,
+  SafetyOutlined,
+} from "@ant-design/icons";
 import moment from "moment";
+import styled from "styled-components";
 
 import { postToken } from "../Basic/api";
 import Documents from "./Documents";
+
+export const Safe = styled(SafetyOutlined)`
+  color: green;
+`;
 
 const defaultExpiration = moment().add(14, "days");
 const dateFormat = "dddd, MM/DD/YY, h:mm a";
@@ -15,12 +34,18 @@ const AddToken = ({ refetch, documentOptions }) => {
   const [title, setTitle] = useState(null);
   const [expiresAt, setExpiresAt] = useState(defaultExpiration);
   const [documents, setDocuments] = useState([]);
+  const [isDownloadable, setIsDownloadable] = useState(undefined);
 
   const setTitleValue = (event) => setTitle(event.target.value);
 
   const add = async () => {
     if (title && expiresAt) {
-      const token = await postToken({ title, expiresAt, documents });
+      const token = await postToken({
+        title,
+        expiresAt,
+        documents,
+        isDownloadable,
+      });
       if (!token) {
         notification.error({
           ...notificationConfig,
@@ -32,8 +57,13 @@ const AddToken = ({ refetch, documentOptions }) => {
           ...notificationConfig,
           message: `New Token >>${token.title}<< has been created`,
         });
+        setTitle(null);
+        setIsVisible(false);
+        setExpiresAt(defaultExpiration);
+        setDocuments([]);
       }
-      setIsVisible(false);
+
+      setIsDownloadable(undefined);
     }
   };
 
@@ -58,7 +88,23 @@ const AddToken = ({ refetch, documentOptions }) => {
             update={setDocuments}
             documents={documents}
             documentOptions={documentOptions}
+            placeholder="PDF-Document Access"
           />
+
+          <Tooltip
+            title={
+              isDownloadable
+                ? "Download Access"
+                : "Embedded and not downloadbale"
+            }
+          >
+            <Switch
+              checkedChildren={<CloudDownloadOutlined />}
+              unCheckedChildren={<Safe />}
+              checked={isDownloadable}
+              onChange={setIsDownloadable}
+            />
+          </Tooltip>
           <Button
             type="link"
             shape="circle"
@@ -70,7 +116,7 @@ const AddToken = ({ refetch, documentOptions }) => {
       }
       trigger="click"
     >
-      <Button icon={<PlusOutlined />}>Add Access-token</Button>
+      <Button icon={<PlusOutlined />}>Add Access-Link</Button>
     </Popover>
   );
 };

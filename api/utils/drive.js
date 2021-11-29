@@ -15,7 +15,7 @@ const getFolderContent = async (refreshToken) => {
   const folderId = folderRes.data.files[0].id;
   const filesRes = await drive.files.list({
     orderBy: "name, modifiedTime desc",
-    q: `parents in '${folderId}' and not mimeType = 'application/vnd.google-apps.folder'`,
+    q: `parents in '${folderId}' and mimeType = 'application/pdf'`,
   });
   if (filesRes.errors) {
     throw new Error(
