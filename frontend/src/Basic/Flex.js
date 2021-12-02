@@ -14,6 +14,13 @@ const Flex = styled.div`
     css`
       justify-content: space-between;
     `}
+
+  ${(props) =>
+    props.justify &&
+    css`
+      justify-content: ${props.justify};
+    `}
+
   flex-direction: row;
 
   ${(props) =>

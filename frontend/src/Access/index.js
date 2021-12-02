@@ -3,10 +3,20 @@ import { useParams } from "react-router-dom";
 import { useQuery } from "react-query";
 import { Spin, Button } from "antd";
 import { CloudDownloadOutlined } from "@ant-design/icons";
+import styled from "styled-components";
+import _ from "lodash";
 
 import PDF from "./PDF";
 import Flex from "../Basic/Flex";
 import { getAccess, getFileAccess } from "../Basic/api";
+
+const Wrapper = styled(Flex)`
+  width: 370px;
+  margin-top: 40px;
+  > * {
+    margin-bottom: 5px;
+  }
+`;
 
 const DocumentForToken = () => {
   const { token } = useParams();
@@ -58,22 +68,24 @@ const DocumentForToken = () => {
   }
 
   return data?.isDownloadable ? (
-    data.files?.map(({ id, name }) => {
-      return (
-        <Flex column>
-          <Button
-            key={id}
-            icon={<CloudDownloadOutlined />}
-            onClick={handleDownload({
-              documentId: id,
-              name: name,
-            })}
-          >
-            {name}
-          </Button>
-        </Flex>
-      );
-    })
+    <Flex>
+      <Wrapper column>
+        {data.files?.map(({ id, name }) => {
+          return (
+            <Button
+              key={id}
+              icon={<CloudDownloadOutlined />}
+              onClick={handleDownload({
+                documentId: id,
+                name: name,
+              })}
+            >
+              {_.truncate(name)}
+            </Button>
+          );
+        })}
+      </Wrapper>
+    </Flex>
   ) : (
     <PDF files={data?.files} token={token} />
   );

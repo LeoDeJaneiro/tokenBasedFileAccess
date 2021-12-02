@@ -32,22 +32,20 @@ const PDF = ({ files, token }) => {
     return <Pdf token={token} id={id} name={name} />;
   }
 
-  return files?.map(({ id, name }) =>
-    filesByResolution && isDesktop.matchesAll ? (
-      <Pdf
-        token={token}
-        id={filesByResolution.desktop.id}
-        key={filesByResolution.desktop.id}
-        name={filesByResolution.desktop.name}
-      />
-    ) : (
-      <Pdf
-        token={token}
-        id={filesByResolution.mobile.id}
-        key={filesByResolution.mobile.id}
-        name={filesByResolution.mobile.name}
-      />
-    )
+  return filesByResolution && isDesktop.matchesAll ? (
+    <Pdf
+      token={token}
+      id={filesByResolution.desktop.id}
+      key={filesByResolution.desktop.id}
+      name={filesByResolution.desktop.name}
+    />
+  ) : (
+    <Pdf
+      token={token}
+      id={filesByResolution.mobile.id}
+      key={filesByResolution.mobile.id}
+      name={filesByResolution.mobile.name}
+    />
   );
 };
 

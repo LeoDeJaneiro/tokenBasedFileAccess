@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { notification } from "antd";
+import { notification, Button } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 import { useQuery, useMutation } from "react-query";
 import _ from "lodash";
 import styled from "styled-components";
@@ -10,6 +11,7 @@ import {
   getTokens,
   updateToken,
   deleteToken,
+  postToken,
 } from "../Basic/api";
 import AddToken from "./AddToken";
 import Table from "./Table";
@@ -22,13 +24,15 @@ const Wrapper = styled(Flex)`
 
 const Admin = ({ addToUndo = () => {} }) => {
   const [page, setPage] = useState(1);
+  const [isAddingToken, setIsAddingToken] = useState(false);
 
   const { isLoading, error, data, refetch } = useQuery(
     ["tokens", page],
     getTokens(page),
     { keepPreviousData: true }
   );
-  const mutation = useMutation(
+
+  const updateMutation = useMutation(
     (newToken) => {
       const { _id, ...mutation } = newToken;
       return updateToken({ _id, mutation });
@@ -38,6 +42,16 @@ const Admin = ({ addToUndo = () => {} }) => {
     }
   );
 
+  const toggleIsAddingToken = () =>
+    setIsAddingToken((prevIsVisible) => !prevIsVisible);
+
+  const createMutation = useMutation((newToken) => postToken(newToken), {
+    onSuccess: () => {
+      refetch();
+      toggleIsAddingToken();
+    },
+  });
+
   const {
     isLoading: isLoadingDocuments,
     error: errorOfDocuments,
@@ -45,7 +59,7 @@ const Admin = ({ addToUndo = () => {} }) => {
   } = useQuery(["documents"], getDocuments);
 
   const update = (key, _id) => (value) => {
-    mutation.mutate({
+    updateMutation.mutate({
       _id,
       [key]: value,
     });
@@ -110,7 +124,17 @@ const Admin = ({ addToUndo = () => {} }) => {
         reject={reject}
         remove={remove}
       />
-      <AddToken refetch={refetch} documentOptions={documentOptions} />
+      <Button icon={<PlusOutlined />} onClick={toggleIsAddingToken}>
+        Add Access-Link
+      </Button>
+
+      {isAddingToken && (
+        <AddToken
+          createMutation={createMutation}
+          toggleIsAddingToken={toggleIsAddingToken}
+          documentOptions={documentOptions}
+        />
+      )}
     </Wrapper>
   );
 };

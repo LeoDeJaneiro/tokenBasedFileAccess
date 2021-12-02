@@ -4,13 +4,19 @@ import { Spin } from "antd";
 import _ from "lodash";
 import { Document, Page, pdfjs } from "react-pdf/dist/esm/entry.webpack";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+import styled from "styled-components";
 
 import Flex from "../../Basic/Flex";
 import { getFileAccess } from "../../Basic/api";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
+const ResponsivePDF = styled(Document)`
+  width: 100vw;
+`;
+
 const Pdf = ({ id, token, name }) => {
+  const [width, setWidth] = useState(window?.innerWidth);
   const [numPages, setNumPages] = useState(0);
   const refs = useMemo(
     () =>
@@ -45,6 +51,11 @@ const Pdf = ({ id, token, name }) => {
       block: "start",
     });
   };
+  const handleResize = () => {
+    setWidth(window.innerWidth);
+  };
+
+  window.addEventListener("resize", handleResize);
 
   if (isLoading || (!url && !error)) {
     return (
@@ -77,21 +88,18 @@ const Pdf = ({ id, token, name }) => {
 
   return (
     url && (
-      <Document
+      <ResponsivePDF
         file={{ url }}
         options={{ workerSrc: "/pdf.worker.js" }}
         onLoadSuccess={handleLoadSuccess}
-        onRenderAnnotationLayerSuccess={console.log}
-        onRenderAnnotationLayerError={console.error}
-        onGetAnnotationsError={console.error}
         onItemClick={onItemClick}
       >
         {_.map(refs, (_, index) => (
           <div ref={refs[index]}>
-            <Page pageNumber={parseInt(index)} key={index} />
+            <Page pageNumber={parseInt(index)} key={index} width={width} />
           </div>
         ))}
-      </Document>
+      </ResponsivePDF>
     )
   );
 };
