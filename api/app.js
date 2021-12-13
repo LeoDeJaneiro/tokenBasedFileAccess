@@ -6,7 +6,6 @@ const helmet = require("helmet");
 const cors = require("cors");
 const passport = require("passport");
 const session = require("express-session");
-const cookieSession = require("cookie-session");
 require("dotenv").config();
 
 const db = require("./utils/db");
@@ -19,7 +18,17 @@ const documentRouter = require("./routes/document");
 const accessRouter = require("./routes/access");
 
 const app = express();
-db.connect(process.env.MONGO_CONNECTION);
+
+const connectionString = () => {
+  switch (process.env.NODE_ENV) {
+    case "production":
+      return `mongodb://${process.env.API_INTERNAL_USERNAME}:${process.env.API_INTERNAL_PASSWORD}@host.docker.internal/access`;
+    default:
+      return `mongodb://${process.env.API_INTERNAL_USERNAME}:${process.env.API_INTERNAL_PASSWORD}@localhost/access`;
+  }
+};
+
+db.connect(connectionString());
 
 app.use((err, req, res, next) => {
   return res.status(500).json({

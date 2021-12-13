@@ -1,0 +1,8 @@
+apps:
+  - name: "api"
+    script: "./bin/www"
+    cwd: "/service"
+    exec_mode: "cluster"
+    instance: "max"
+    env:
+      NODE_ENV: production
