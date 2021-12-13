@@ -2,7 +2,6 @@ import { useState } from "react";
 import { notification, Button } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { useQuery, useMutation } from "react-query";
-import _ from "lodash";
 import styled from "styled-components";
 
 import Flex from "../Basic/Flex";
@@ -22,7 +21,7 @@ const Wrapper = styled(Flex)`
   padding: 10px;
 `;
 
-const Admin = ({ addToUndo = () => {} }) => {
+const Admin = () => {
   const [page, setPage] = useState(1);
   const [isAddingToken, setIsAddingToken] = useState(false);
 
@@ -49,6 +48,12 @@ const Admin = ({ addToUndo = () => {} }) => {
     onSuccess: () => {
       refetch();
       toggleIsAddingToken();
+    },
+  });
+
+  const deleteMutation = useMutation(({ _id }) => deleteToken(_id), {
+    onSuccess: () => {
+      refetch();
     },
   });
 
@@ -92,9 +97,9 @@ const Admin = ({ addToUndo = () => {} }) => {
   };
 
   const remove = (_id) => () => {
-    addToUndo(_.find(data, { _id }));
-    deleteToken(_id);
-    refetch();
+    deleteMutation.mutate({
+      _id,
+    });
   };
 
   const copyToClipboard = (token) => () => {

@@ -1,13 +1,14 @@
 import { useMemo, useState, createRef } from "react";
 import { useQuery } from "react-query";
-import { Spin } from "antd";
 import _ from "lodash";
 import { Document, Page, pdfjs } from "react-pdf/dist/esm/entry.webpack";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import styled from "styled-components";
 
 import Flex from "../../Basic/Flex";
+import Loading from "../../Basic/Loading";
 import { getFileAccess } from "../../Basic/api";
+import useWindow from "./useWindow";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
@@ -15,8 +16,8 @@ const ResponsivePDF = styled(Document)`
   width: 100vw;
 `;
 
-const Pdf = ({ id, token, name }) => {
-  const [width, setWidth] = useState(window?.innerWidth);
+const Pdf = ({ id, token }) => {
+  const { width } = useWindow();
   const [numPages, setNumPages] = useState(0);
   const refs = useMemo(
     () =>
@@ -27,7 +28,7 @@ const Pdf = ({ id, token, name }) => {
   );
 
   const { isLoading, error, data } = useQuery(
-    "pdf",
+    `pdf_${id}`,
     getFileAccess({ documentId: id, token }),
     {
       refetchOnWindowFocus: false,
@@ -51,18 +52,9 @@ const Pdf = ({ id, token, name }) => {
       block: "start",
     });
   };
-  const handleResize = () => {
-    setWidth(window.innerWidth);
-  };
-
-  window.addEventListener("resize", handleResize);
 
   if (isLoading || (!url && !error)) {
-    return (
-      <Flex>
-        <Spin size="large" />
-      </Flex>
-    );
+    return <Loading />;
   }
 
   if (error) {
@@ -93,6 +85,7 @@ const Pdf = ({ id, token, name }) => {
         options={{ workerSrc: "/pdf.worker.js" }}
         onLoadSuccess={handleLoadSuccess}
         onItemClick={onItemClick}
+        loading={<Loading />}
       >
         {_.map(refs, (_, index) => (
           <div ref={refs[index]}>

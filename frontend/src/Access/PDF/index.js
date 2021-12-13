@@ -1,14 +1,13 @@
-import { useMemo } from "react";
-import { useMediaQueries } from "@react-hook/media-query";
+import { useMemo, useEffect } from "react";
 
 import Flex from "../../Basic/Flex";
 import Pdf from "./Pdf";
+import useWindow from "./useWindow";
+
+const minDesktopWidth = 1335;
 
 const PDF = ({ files, token }) => {
-  const isDesktop = useMediaQueries({
-    screen: "screen",
-    width: "(min-width: 1335px)",
-  });
+  const { width } = useWindow();
 
   const filesByResolution = useMemo(
     () =>
@@ -23,36 +22,36 @@ const PDF = ({ files, token }) => {
   );
 
   if (!filesByResolution.desktop) {
-    const { id, name } = filesByResolution.mobile;
-    return <Pdf token={token} id={id} name={name} />;
+    return <Pdf token={token} id={filesByResolution.mobile.id} />;
   }
 
   if (!filesByResolution.mobile) {
-    const { id, name } = filesByResolution.desktop;
-    return <Pdf token={token} id={id} name={name} />;
+    return <Pdf token={token} id={filesByResolution.desktop.id} />;
   }
 
-  return filesByResolution && isDesktop.matchesAll ? (
+  return filesByResolution && width >= minDesktopWidth ? (
     <Pdf
       token={token}
       id={filesByResolution.desktop.id}
       key={filesByResolution.desktop.id}
-      name={filesByResolution.desktop.name}
     />
   ) : (
     <Pdf
       token={token}
       id={filesByResolution.mobile.id}
       key={filesByResolution.mobile.id}
-      name={filesByResolution.mobile.name}
     />
   );
 };
 
 const RestrictedPDF = ({ files, token }) => {
-  document.addEventListener("contextmenu", (e) => {
-    e.preventDefault();
-  });
+  useEffect(() => {
+    const preventContext = (e) => {
+      e.preventDefault();
+    };
+    document.addEventListener("contextmenu", preventContext);
+    return () => document.removeEventListener("contextmenu", preventContext);
+  }, []);
 
   return (
     <Flex className="sc-qebnflwesdvlns">

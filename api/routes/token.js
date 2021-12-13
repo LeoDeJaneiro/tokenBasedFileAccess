@@ -44,6 +44,7 @@ const post = async (req, res, next) => {
     title: req.body.title,
     expiresAt,
     ...(req.body.documents ? { documents: req.body.documents } : {}),
+    ...(req.body.isDownloadable ? { documents: req.body.isDownloadable } : {}),
   });
   token.save().catch(next);
   res.json(token);
