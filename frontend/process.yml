@@ -1,0 +1,8 @@
+apps:
+  - name: "frontend"
+    script: "server.js"
+    cwd: "/service"
+    exec_mode: "cluster"
+    instance: "max"
+    env:
+      NODE_ENV: production

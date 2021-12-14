@@ -1,0 +1,43 @@
+---
+version: "3"
+services:
+  access-db:
+    image: mongo:latest
+    env_file:
+      - .env
+    ports:
+      - 27017:27017
+    volumes:
+      - db-volume:/data/db
+      - ./db/initdb.d:/docker-entrypoint-initdb.d
+    restart: always
+
+  api:
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    build:
+      context: api
+    ports:
+      - 36912:36912
+    depends_on:
+      - access-db
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    container_name: interfaces
+    ports:
+      - 3000:3000
+    build:
+      args:
+        REACT_APP_GOOGLE_DRIVE_FOLDER: $GOOGLE_DRIVE_FOLDER
+        REACT_APP_API: $API
+        NODE_ENV: production
+      context: frontend
+    restart: always
+
+volumes:
+  db-volume:
