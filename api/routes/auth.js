@@ -11,7 +11,6 @@ const {
 } = require("../utils/auth");
 
 const callback = async (req, res) => {
-  console.log(req.user.refreshToken);
   try {
     if (isAuthorized(req.user.email)) {
       const token = signJWT({
